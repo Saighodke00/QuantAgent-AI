@@ -2,10 +2,35 @@ import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 
+class ResilientChatModel:
+    """
+    A robust custom wrapper that intercepts ALL execution-time exceptions
+    (like 429 RESOURCE_EXHAUSTED) from the primary LLM and seamlessly
+    routes the invocation to the fallback LLM.
+    """
+    def __init__(self, primary, fallback):
+        self.primary = primary
+        self.fallback = fallback
+
+    def invoke(self, messages, *args, **kwargs):
+        if not self.primary:
+            if self.fallback:
+                return self.fallback.invoke(messages, *args, **kwargs)
+            raise ValueError("No active LLM available.")
+        
+        try:
+            return self.primary.invoke(messages, *args, **kwargs)
+        except Exception as e:
+            if self.fallback:
+                # Log silently without emojis to prevent Windows charmap print crashes
+                print(f"[SYSTEM] Primary LLM invocation failed ({type(e).__name__}). Resiliently falling back to Groq...")
+                return self.fallback.invoke(messages, *args, **kwargs)
+            raise e
+
 def get_llm(temperature: float = 0.0):
     """
-    Returns a LangChain LLM instance.
-    Uses Google Gemini (gemini-flash-latest) as the primary provider.
+    Returns a custom resilient LLM wrapper instance.
+    Uses Google Gemini (gemini-flash-latest) as the primary provider with a fast 10s timeout.
     Resiliently falls back to Groq (mixtral-8x7b-32768) if Gemini is rate-limited,
     exhausted (429), or encounters any invocation/connection errors.
     """
@@ -33,15 +58,7 @@ def get_llm(temperature: float = 0.0):
         except Exception:
             pass
 
-    # Return resilient fallback chain depending on available providers
-    if gemini_model and groq_model:
-        return gemini_model.with_fallbacks([groq_model])
-    elif gemini_model:
-        return gemini_model
-    elif groq_model:
-        return groq_model
-    else:
-        raise ValueError("Neither GEMINI_API_KEY nor GROQ_API_KEY is set in the environment.")
+    return ResilientChatModel(gemini_model, groq_model)
 
 def clean_response_content(content) -> str:
     """
