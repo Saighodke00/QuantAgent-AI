@@ -286,8 +286,9 @@ if analyze_clicked and prompt.strip():
             unsafe_allow_html=True,
         )
 
-    with st.spinner("Analyzing strategy..."):
-        result = run_analyst_only(prompt.strip())
+    with col_mid:
+        with st.spinner("Analyzing strategy..."):
+            result = run_analyst_only(prompt.strip())
 
     # Merge logs and extracted fields into session state
     st.session_state.agent_logs = result.get("agent_logs", [])
@@ -328,25 +329,41 @@ if execute_clicked and st.session_state.extracted_intent:
 
     final_state = exec_state.copy()
 
-    # Stream LangGraph execution — update terminal after each node
-    for snapshot in stream_execution(exec_state):
-        new_logs = snapshot.get("agent_logs", [])
-        # LangGraph values mode: snapshot IS the full state
-        st.session_state.agent_logs = new_logs
+    with col_mid:
+        # Dynamic status container to prevent screen freezing look during LLM invocations
+        with st.status("🤖 Initializing Agentic Core Execution...", expanded=True) as status:
+            status.write("🔍 Strategy context loaded. Building LangGraph orchestration...")
+            
+            # Stream LangGraph execution — update terminal after each node
+            for snapshot in stream_execution(exec_state):
+                new_logs = snapshot.get("agent_logs", [])
+                # LangGraph values mode: snapshot IS the full state
+                st.session_state.agent_logs = new_logs
 
-        # Update terminal live
-        with terminal_slot.container():
-            st.markdown(
-                render_terminal_html(st.session_state.agent_logs),
-                unsafe_allow_html=True,
-            )
+                # Update st.status with the latest log dynamically
+                if new_logs:
+                    latest = new_logs[-1]
+                    status.write(f"📡 **[{latest['agent']}]** {latest['message']}")
 
-        # Update code panel if code was generated
-        if snapshot.get("generated_code"):
-            st.session_state.generated_code = snapshot["generated_code"]
+                # Update terminal live
+                with terminal_slot.container():
+                    st.markdown(
+                        render_terminal_html(st.session_state.agent_logs),
+                        unsafe_allow_html=True,
+                    )
 
-        final_state = snapshot
-        time.sleep(0.05)  # tiny yield to let Streamlit paint
+                # Update code panel if code was generated
+                if snapshot.get("generated_code"):
+                    st.session_state.generated_code = snapshot["generated_code"]
+
+                final_state = snapshot
+                time.sleep(0.05)  # tiny yield to let Streamlit paint
+
+            # Dynamically change status style depending on result
+            if final_state.get("execution_success"):
+                status.update(label="✅ Backtest Complete! Metrics Loaded Below.", state="complete", expanded=False)
+            else:
+                status.update(label="❌ Pipeline Execution Failed. Check logs above.", state="error", expanded=False)
 
     # ── Execution complete ────────────────────────────────────────────
     if final_state.get("execution_success") and final_state.get("result_json"):

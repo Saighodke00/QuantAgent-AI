@@ -8,7 +8,6 @@ import os
 import re
 from datetime import datetime, timezone, timedelta
 
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from agents.state import AgentLog, GraphState
@@ -34,19 +33,15 @@ def intent_analyst_node(state: GraphState) -> dict:
     logs.append(_make_log(f"Parsing prompt: \"{state['user_prompt'][:80]}...\""))
 
     try:
-        from langchain_groq import ChatGroq
-        llm = ChatGroq(
-            model="llama-3.3-70b-versatile",
-            temperature=0.0,
-            groq_api_key=os.environ["GROQ_API_KEY"],
-        )
+        from agents.llm import get_llm, clean_response_content
+        llm = get_llm(temperature=0.0)
         response = llm.invoke(
             [
                 SystemMessage(content=INTENT_ANALYST_SYSTEM),
                 HumanMessage(content=f"User prompt: {state['user_prompt']}"),
             ]
         )
-        raw = response.content.strip()
+        raw = clean_response_content(response.content)
 
         # Strip markdown code fences if the model adds them
         raw = re.sub(r"^```[a-z]*\n?", "", raw)

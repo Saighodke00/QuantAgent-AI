@@ -7,7 +7,7 @@ import os
 import re
 from datetime import datetime, timezone
 
-from langchain_groq import ChatGroq
+from agents.llm import get_llm, clean_response_content
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from agents.state import AgentLog, GraphState
@@ -82,11 +82,7 @@ def quant_coder_node(state: GraphState) -> dict:
         error_context=error_context,
     )
 
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0.1,
-        groq_api_key=os.environ["GROQ_API_KEY"],
-    )
+    llm = get_llm(temperature=0.1)
 
     try:
         response = llm.invoke(
@@ -95,7 +91,7 @@ def quant_coder_node(state: GraphState) -> dict:
                 HumanMessage(content=human_prompt),
             ]
         )
-        strategy_logic = _strip_fences(response.content)
+        strategy_logic = _strip_fences(clean_response_content(response.content))
 
         # The LLM now generates the entire standalone script directly
         full_code = strategy_logic

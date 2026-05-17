@@ -7,7 +7,7 @@ import os
 import re
 from datetime import datetime, timezone
 
-from langchain_groq import ChatGroq
+from agents.llm import get_llm, clean_response_content
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from agents.state import AgentLog, GraphState
@@ -66,11 +66,7 @@ def code_critic_node(state: GraphState) -> dict:
         code=state.get("generated_code", ""),
     )
 
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0.0,
-        groq_api_key=os.environ["GROQ_API_KEY"],
-    )
+    llm = get_llm(temperature=0.0)
 
     try:
         response = llm.invoke(
@@ -79,7 +75,7 @@ def code_critic_node(state: GraphState) -> dict:
                 HumanMessage(content=human_prompt),
             ]
         )
-        fixed_code = _strip_fences(response.content)
+        fixed_code = _strip_fences(clean_response_content(response.content))
         logs.append(_make_log("Patch applied. Routing back to sandbox...", "WARNING"))
         return {
             "generated_code": fixed_code,
