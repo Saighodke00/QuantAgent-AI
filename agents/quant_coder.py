@@ -82,7 +82,7 @@ def quant_coder_node(state: GraphState) -> dict:
         error_context=error_context,
     )
 
-    llm = get_llm(temperature=0.1)
+    llm = get_llm(temperature=0.0)
 
     try:
         response = llm.invoke(

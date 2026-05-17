@@ -113,6 +113,7 @@ Follow these strict coding rules:
    - You MUST use these exact hardcoded loops for scanning parameters to avoid empty states or model shortcuts:
      - For momentum/breakout/indicator lookbacks, use exactly: `for window in [3, 5, 10, 14, 21]:`
      - For holding durations, use exactly: `for hold_days in [2, 4, 7, 14]:`
+   - SINGLE-DOWNLOAD RULE: yf.download() must ONLY happen once, outside and before the optimization parameter loops begin. You must NEVER call yf.download() inside any parameter loops, as calling Yahoo Finance repeatedly dozen of times will trigger server rate limits and bottleneck execution speeds by 10x. Download the complete dataframe once, and then use copy/slice operations in memory for parameter optimization.
    - DATA PROTECTION: In your scanning loop, check if a parameter setup generates 0 trades across the historical timeline. If it generates 0 trades, discard that iteration completely and check the next one.
    - JSON STRUCTURE: Ensure the final print statement returns a populated 'equity_curve' array matching the index length of the dataset. Do not send back default or zeroed-out parameters.
 5. FOR LOOP SCAN: Run a loop testing every combination of these parameters against the data.
