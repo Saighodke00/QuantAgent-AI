@@ -1,0 +1,345 @@
+/* ═══════════════════════════════════════════════════════════
+   APEX QUANT-FORGE — Design System
+   Obsidian dark theme with neon teal accents
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-primary:    #0B0F19;
+  --bg-secondary:  #111827;
+  --bg-card:       #1C2333;
+  --bg-card-hover: #243044;
+  --border:        #1E293B;
+  --border-bright: #334155;
+
+  --teal:    #00F5D4;
+  --indigo:  #818CF8;
+  --amber:   #FCD34D;
+  --red:     #F87171;
+  --green:   #34D399;
+  --orange:  #FB923C;
+  --slate:   #CBD5E1;
+  --muted:   #475569;
+
+  --text-primary: #E2E8F0;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+/* ── Streamlit Global Reset ───────────────────────────────── */
+.stApp, .main, [data-testid="stAppViewContainer"] {
+  background-color: var(--bg-primary) !important;
+  font-family: 'Inter', sans-serif !important;
+  color: var(--text-primary) !important;
+}
+
+[data-testid="stHeader"] {
+  background-color: var(--bg-primary) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+[data-testid="stSidebar"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+.stTextArea textarea,
+.stTextInput input {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-bright) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+}
+
+.stTextArea textarea:focus,
+.stTextInput input:focus {
+  border-color: var(--teal) !important;
+  box-shadow: 0 0 0 2px rgba(0,245,212,0.12) !important;
+}
+
+/* ── Button Styles ────────────────────────────────────────── */
+.stButton > button {
+  background: linear-gradient(135deg, #00F5D4 0%, #0EA5E9 100%) !important;
+  color: #0B0F19 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 0.55rem 1.4rem !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: 0.5px !important;
+}
+
+.stButton > button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(0,245,212,0.25) !important;
+}
+
+.stButton > button:active {
+  transform: translateY(0) !important;
+}
+
+/* ── Panel Headers ────────────────────────────────────────── */
+.panel-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+/* ── App Title Bar ────────────────────────────────────────── */
+.apex-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 14px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.apex-logo {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
+}
+.apex-logo span { color: var(--teal); }
+.apex-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(0,245,212,0.1);
+  border: 1px solid rgba(0,245,212,0.3);
+  color: var(--teal);
+}
+
+/* ── Terminal ─────────────────────────────────────────────── */
+.terminal-wrap {
+  background: #080C14;
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #0F1623;
+  border-bottom: 1px solid var(--border);
+}
+.terminal-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.terminal-dot.red    { background: #F87171; }
+.terminal-dot.yellow { background: #FCD34D; }
+.terminal-dot.green  { background: #34D399; }
+.terminal-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-left: 6px;
+  text-transform: uppercase;
+}
+.terminal-body {
+  padding: 12px 14px;
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-bright) transparent;
+}
+.terminal-empty {
+  padding: 40px 14px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+.log-entry {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 2px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  animation: fadeSlideIn 0.3s ease forwards;
+  opacity: 0;
+}
+.log-ts {
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.log-badge {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+.log-msg {
+  word-break: break-word;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Stat Grid ────────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--border-bright); }
+.stat-icon { font-size: 20px; }
+.stat-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.2;
+}
+
+/* ── Ledger Cards ─────────────────────────────────────────── */
+.ledger-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ledger-card:hover {
+  border-color: var(--border-bright);
+  background: var(--bg-card-hover);
+  transform: translateX(2px);
+}
+.ledger-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.ledger-ticker {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+}
+.ledger-strategy {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.ledger-meta {
+  font-size: 10px;
+  color: var(--muted);
+}
+.ledger-empty {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  padding: 24px 0;
+  line-height: 1.8;
+}
+.badge-positive {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34D399;
+  background: rgba(52,211,153,0.1);
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 4px;
+  padding: 1px 7px;
+}
+.badge-negative {
+  font-size: 11px;
+  font-weight: 700;
+  color: #F87171;
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: 4px;
+  padding: 1px 7px;
+}
+
+/* ── HITL Confirmation Box ────────────────────────────────── */
+.hitl-box {
+  background: linear-gradient(135deg, rgba(129,140,248,0.08) 0%, rgba(0,245,212,0.05) 100%);
+  border: 1px solid rgba(129,140,248,0.4);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin: 12px 0;
+}
+.hitl-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--indigo);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+.hitl-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+}
+.hitl-key   { color: var(--text-muted); }
+.hitl-value { color: var(--text-primary); font-weight: 500; font-family: 'JetBrains Mono', monospace; }
+
+/* ── Divider ──────────────────────────────────────────────── */
+.apex-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+/* ── Expander override ────────────────────────────────────── */
+[data-testid="stExpander"] {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ── Column padding ───────────────────────────────────────── */
+[data-testid="column"] {
+  padding: 0 8px !important;
+}
+
+/* ── Hide Streamlit branding ──────────────────────────────── */
+#MainMenu, footer, [data-testid="stToolbar"] { visibility: hidden; }
