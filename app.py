@@ -105,31 +105,14 @@ with col_mid:
     # ── Prompt Input ─────────────────────────────────────────────────
     st.markdown('<div class="panel-header">💬 STRATEGY PROMPT</div>', unsafe_allow_html=True)
 
-    # 1. Define elite showcase prompts template dictionary
-    STRATEGY_TEMPLATES = {
-        "✍️ Write Custom Prompt...": "",
-        "📈 Bitcoin Breakout (Trend Following)": "Test a high-probability long breakout strategy on Bitcoin (BTC-USD) over the last 24 months. Enter a position when the price closes above its 14-day highest high. Use the machine learning alpha filter to optimize the holding timeframe between 2 to 7 days to maximize returns.",
-        "🛡️ Nvidia Short Trap (AI Protection Demo)": "Test a short-selling momentum strategy on Nvidia (NVDA) over the last 24 months. Enter a short position if the daily close drops below its trailing 5-day lowest low, and optimize the hold horizon to find the safest exit point.",
-        "🏦 Microsoft Institutional Grind (Low Risk)": "Test a classic moving average crossover system on Microsoft (MSFT) for the past 24 months. Enter long when a fast EMA crosses above a slow EMA. Optimize the lookback windows to maximize the Sharpe and Sortino ratios while using the ML alpha filter to block entries during sideways congestion zones."
-    }
-
-    # 2. Render the dropdown selector
-    selected_template = st.selectbox(
-        "🎯 Quick-Load Strategy Template",
-        options=list(STRATEGY_TEMPLATES.keys()),
-        index=0,
-        help="Select a pre-configured quantitative strategy to instantly test system performance."
-    )
-
-    # 3. Get the text of the chosen template
-    default_prompt_text = STRATEGY_TEMPLATES[selected_template]
-
-    # 4. Tie the value of the text area directly to the dropdown choice
     prompt = st.text_area(
         label="strategy_input",
         label_visibility="collapsed",
-        value=default_prompt_text,
-        placeholder="Type your trading idea here or choose a template above...",
+        placeholder=(
+            'e.g. "Buy TSLA when RSI falls below 30 and sell when it crosses 70, '
+            'test over the past 2 years"\n\n'
+            'or: "Run a 50/200 EMA golden cross strategy on NIFTY 50 since 2022"'
+        ),
         height=100,
         key="prompt_input",
     )
