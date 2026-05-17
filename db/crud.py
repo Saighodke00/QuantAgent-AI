@@ -33,8 +33,9 @@ def save_backtest(
             (id, user_prompt, ticker_symbol, strategy_name,
              generated_python_code, win_rate_percentage,
              total_return_percentage, max_drawdown_percentage,
-             sharpe_ratio, total_trades, equity_curve_points, created_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+             sharpe_ratio, total_trades, equity_curve_points,
+             feature_importances, trade_log, advanced_stats, created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
             strategy_id,
@@ -48,6 +49,9 @@ def save_backtest(
             result.get("sharpe_ratio", 0.0),
             result.get("total_trades", 0),
             json.dumps(result.get("equity_curve", [])),
+            json.dumps(result.get("feature_importances", {})),
+            json.dumps(result.get("trade_log", [])),
+            json.dumps(result.get("advanced_stats", {})),
             _now(),
         ),
     )
@@ -112,4 +116,11 @@ def get_backtest_detail(strategy_id: str) -> dict[str, Any] | None:
         return None
     d = dict(row)
     d["equity_curve_points"] = json.loads(d["equity_curve_points"])
+    
+    # Load advanced structures if they exist in SQLite
+    d["feature_importances"] = json.loads(d["feature_importances"]) if d.get("feature_importances") else {}
+    d["trade_log"] = json.loads(d["trade_log"]) if d.get("trade_log") else []
+    d["advanced_stats"] = json.loads(d["advanced_stats"]) if d.get("advanced_stats") else {
+        "Profit_Factor": 1.0, "Sortino_Ratio": 0.0, "Max_Win_Streak": 0, "Total_Skipped_Signals": 0
+    }
     return d

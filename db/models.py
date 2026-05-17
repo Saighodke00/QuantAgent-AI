@@ -50,5 +50,20 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_agent_logs_strategy
             ON agent_runtime_logs(strategy_id);
     """)
+
+    # Alter strategy_backtests table to add new columns if they do not exist
+    try:
+        cursor.execute("ALTER TABLE strategy_backtests ADD COLUMN feature_importances TEXT;")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE strategy_backtests ADD COLUMN trade_log TEXT;")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE strategy_backtests ADD COLUMN advanced_stats TEXT;")
+    except sqlite3.OperationalError:
+        pass
+
     conn.commit()
     conn.close()

@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import streamlit as st
+import pandas as pd
 from dotenv import load_dotenv
 
 # ── Load env early ────────────────────────────────────────────────────
@@ -159,26 +160,83 @@ with col_mid:
 with col_right:
     st.markdown('<div class="panel-header">📊 QUANT ANALYTICS</div>', unsafe_allow_html=True)
 
-    chart_slot = st.empty()
-    stats_slot = st.empty()
-    code_slot  = st.empty()
-
     if st.session_state.backtest_result:
         result = st.session_state.backtest_result
-        with chart_slot.container():
+        
+        # Create responsive interactive tabs
+        tab_charts, tab_ledger, tab_ai_brain = st.tabs([
+            "📈 Equity Curve", 
+            "📜 Advanced Trade Ledger", 
+            "🤖 AI Explainability Brain"
+        ])
+        
+        # --- TAB 1: MAIN GRAPH & STATS ---
+        with tab_charts:
+            st.markdown("#### Portfolio Growth Timeline")
             fig = render_equity_chart(result)
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-        with stats_slot.container():
             st.markdown(render_stat_cards(result), unsafe_allow_html=True)
-        with code_slot.container():
-            if st.session_state.generated_code:
-                render_code_block(st.session_state.generated_code)
+            
+        # --- TAB 2: INTERACTIVE TRADE LEDGER & TABLE ---
+        with tab_ledger:
+            st.markdown("#### Historical Strategy Executions")
+            
+            # 1. Advanced Metrics Deck
+            c1, c2, c3 = st.columns(3)
+            advanced = result.get("advanced_stats", {})
+            if not advanced:
+                advanced = {"Profit_Factor": 1.0, "Sortino_Ratio": 0.0, "Max_Win_Streak": 0, "Total_Skipped_Signals": 0}
+            pf = advanced.get("Profit_Factor", 1.0)
+            sr = advanced.get("Sortino_Ratio", 0.0)
+            ts = advanced.get("Total_Skipped_Signals", 0)
+            
+            c1.metric("Profit Factor", f"{pf:.2f}x")
+            c2.metric("Sortino Ratio", f"{sr:.2f}")
+            c3.metric("AI Filtered Noise", f"{ts} Setups")
+            
+            st.divider()
+            
+            # 2. Interactive Data Table
+            st.markdown("##### Detailed Execution Audit Trails")
+            trade_log = result.get("trade_log", [])
+            if trade_log:
+                trade_df = pd.DataFrame(trade_log)
+                st.dataframe(
+                    trade_df, 
+                    use_container_width=True,
+                    column_config={
+                        "PnL_Pct": st.column_config.NumberColumn("PnL (%)", format="%.2f%%"),
+                        "Status": st.column_config.SelectboxColumn("Execution State")
+                    }
+                )
+            else:
+                st.info("ℹ️ No historical execution entries generated for this configuration.")
+
+        # --- TAB 3: MACHINE LEARNING EXPLAINABILITY ---
+        with tab_ai_brain:
+            st.markdown("#### Walk-Forward Feature Importance Mapping")
+            st.caption("This chart displays exactly which technical signals your Random Forest model relied on to filter out bad market setups.")
+            
+            features = result.get("feature_importances", {})
+            if features:
+                feat_df = pd.DataFrame({
+                    "Market Metric": list(features.keys()),
+                    "Predictive Weight (%)": [float(val) * 100 for val in features.values()]
+                }).sort_values(by="Predictive Weight (%)", ascending=True)
+                
+                st.bar_chart(data=feat_df, x="Market Metric", y="Predictive Weight (%)", horizontal=True)
+            else:
+                st.warning("⚠️ No machine learning weights found for this layout variation.")
+
+        # Expander code block at the bottom
+        if st.session_state.generated_code:
+            render_code_block(st.session_state.generated_code)
     else:
-        chart_slot.markdown("""
+        st.markdown("""
         <div style="height:240px;display:flex;align-items:center;justify-content:center;
              background:#111827;border:1px solid #1E293B;border-radius:10px;
              color:#475569;font-size:13px;text-align:center;line-height:2;">
-            📈<br>Equity curve will render<br>after backtest completes
+            📈<br>Equity curve and interactive tabs will render<br>after backtest completes
         </div>""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────
