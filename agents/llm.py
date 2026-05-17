@@ -6,29 +6,42 @@ def get_llm(temperature: float = 0.0):
     """
     Returns a LangChain LLM instance.
     Uses Google Gemini (gemini-flash-latest) as the primary provider.
-    Falls back to Groq (mixtral-8x7b-32768) if Gemini is unavailable or fails.
+    Resiliently falls back to Groq (mixtral-8x7b-32768) if Gemini is rate-limited,
+    exhausted (429), or encounters any invocation/connection errors.
     """
-    # 1. Try Gemini
+    gemini_model = None
     if os.environ.get("GEMINI_API_KEY"):
         try:
-            return ChatGoogleGenerativeAI(
+            gemini_model = ChatGoogleGenerativeAI(
                 model="gemini-flash-latest",
                 temperature=temperature,
                 google_api_key=os.environ["GEMINI_API_KEY"],
+                timeout=10.0,
             )
         except Exception:
-            # Fall back to Groq if Gemini creation fails
             pass
 
-    # 2. Try Groq
+    groq_model = None
     if os.environ.get("GROQ_API_KEY"):
-        return ChatGroq(
-            model="mixtral-8x7b-32768",
-            temperature=temperature,
-            groq_api_key=os.environ["GROQ_API_KEY"],
-        )
+        try:
+            groq_model = ChatGroq(
+                model="mixtral-8x7b-32768",
+                temperature=temperature,
+                groq_api_key=os.environ["GROQ_API_KEY"],
+                timeout=10.0,
+            )
+        except Exception:
+            pass
 
-    raise ValueError("Neither GEMINI_API_KEY nor GROQ_API_KEY is set in the environment.")
+    # Return resilient fallback chain depending on available providers
+    if gemini_model and groq_model:
+        return gemini_model.with_fallbacks([groq_model])
+    elif gemini_model:
+        return gemini_model
+    elif groq_model:
+        return groq_model
+    else:
+        raise ValueError("Neither GEMINI_API_KEY nor GROQ_API_KEY is set in the environment.")
 
 def clean_response_content(content) -> str:
     """
