@@ -31,7 +31,7 @@ def get_llm(temperature: float = 0.0):
     """
     Returns a custom resilient LLM wrapper instance.
     Uses Google Gemini (gemini-flash-latest) as the primary provider with a fast 10s timeout.
-    Resiliently falls back to Groq (mixtral-8x7b-32768) if Gemini is rate-limited,
+    Resiliently falls back to Groq (llama-3.3-70b-versatile) if Gemini is rate-limited,
     exhausted (429), or encounters any invocation/connection errors.
     """
     gemini_model = None
@@ -50,7 +50,7 @@ def get_llm(temperature: float = 0.0):
     if os.environ.get("GROQ_API_KEY"):
         try:
             groq_model = ChatGroq(
-                model="mixtral-8x7b-32768",
+                model="llama-3.3-70b-versatile",
                 temperature=temperature,
                 groq_api_key=os.environ["GROQ_API_KEY"],
                 timeout=10.0,
