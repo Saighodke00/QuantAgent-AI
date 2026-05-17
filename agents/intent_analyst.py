@@ -36,7 +36,7 @@ def intent_analyst_node(state: GraphState) -> dict:
     try:
         from langchain_groq import ChatGroq
         llm = ChatGroq(
-            model="llama-3.1-8b-instant",
+            model="llama-3.3-70b-versatile",
             temperature=0.0,
             groq_api_key=os.environ["GROQ_API_KEY"],
         )

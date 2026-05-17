@@ -81,7 +81,7 @@ def quant_coder_node(state: GraphState) -> dict:
     )
 
     llm = ChatGroq(
-        model="llama-3.1-8b-instant",
+        model="llama-3.3-70b-versatile",
         temperature=0.1,
         groq_api_key=os.environ["GROQ_API_KEY"],
     )
