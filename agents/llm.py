@@ -50,7 +50,7 @@ def get_llm(temperature: float = 0.0):
     if os.environ.get("GROQ_API_KEY"):
         try:
             groq_model = ChatGroq(
-                model="llama-3.3-70b-versatile",
+                model="llama-3.1-8b-instant",
                 temperature=temperature,
                 groq_api_key=os.environ["GROQ_API_KEY"],
                 timeout=10.0,
