@@ -202,7 +202,19 @@ QUANT_CODER_HUMAN = """Write the optimization backtest script for:
 - Strategy: {strategy_name} ({strategy_type})
 - Description: {strategy_description}
 - Date Range: {date_start} to {date_end}
+- AI ML Filter Enabled: {ai_filter_enabled}
+- AI Confidence Threshold: {ai_confidence_threshold}
 {error_context}
+
+CRITICAL USER TOGGLE RULES:
+1. You MUST respect the configuration values:
+   - FILTER_ENABLED = {ai_filter_enabled} (True/False)
+   - CONFIDENCE_THRESHOLD = {ai_confidence_threshold} (Float between 0.3 and 0.7)
+2. Inside your generated script, modify your final signal execution/trade entry line:
+   - If FILTER_ENABLED is True: enter a position ONLY when the technical breakout/reversion signal occurs AND the Random Forest model predict_proba[:, 1] passes CONFIDENCE_THRESHOLD.
+   - If FILTER_ENABLED is False: enter a position immediately when the technical signal occurs, completely bypassing/ignoring the Random Forest classification filter.
+3. Calculate and output feature_importances and trade_log regardless of the FILTER_ENABLED value, but adapt the trade statuses to "ML_FILTERED" if the AI blocks the signal when FILTER_ENABLED is True.
+
 Remember: Write a single self-contained Python script. 
 Return ONLY Python code wrapped in a code block."""
 

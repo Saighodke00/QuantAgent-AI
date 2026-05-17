@@ -17,6 +17,8 @@ class AgentLog(TypedDict):
 class GraphState(TypedDict):
     # ── Input ─────────────────────────────────────────────────────────
     user_prompt: str
+    ai_filter_enabled: bool
+    ai_confidence_threshold: float
 
     # ── Extracted intent (Node 1 output) ─────────────────────────────
     ticker: str

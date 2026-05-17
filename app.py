@@ -45,6 +45,8 @@ _DEFAULTS = {
     "generated_code": "",
     "error_msg": "",
     "last_prompt": "",
+    "ai_filter_enabled": True,
+    "ai_confidence_threshold": 0.5,
 }
 for k, v in _DEFAULTS.items():
     if k not in st.session_state:
@@ -114,6 +116,22 @@ with col_mid:
         height=100,
         key="prompt_input",
     )
+
+    # ── AI Engine Settings Expander ──────────────────────────────────
+    with st.expander("🤖 AI Engine Settings", expanded=True):
+        st.session_state.ai_filter_enabled = st.toggle(
+            "Enable ML Alpha Filter", 
+            value=st.session_state.ai_filter_enabled,
+            help="Turn off to see raw technical signals without AI protection."
+        )
+        st.session_state.ai_confidence_threshold = st.slider(
+            "AI Confidence Threshold", 
+            min_value=0.3, 
+            max_value=0.7, 
+            value=st.session_state.ai_confidence_threshold, 
+            step=0.05,
+            help="Minimum prediction probability required to allow a signal."
+        )
 
     btn_col1, btn_col2, btn_col3 = st.columns([2, 1.2, 1])
 
@@ -292,6 +310,8 @@ if execute_clicked and st.session_state.extracted_intent:
     # Build initial state for execution graph
     exec_state = {
         "user_prompt":          st.session_state.last_prompt,
+        "ai_filter_enabled":    st.session_state.ai_filter_enabled,
+        "ai_confidence_threshold": st.session_state.ai_confidence_threshold,
         "ticker":               intent["ticker"],
         "strategy_name":        intent["strategy_name"],
         "strategy_type":        intent["strategy_type"],

@@ -77,6 +77,8 @@ def quant_coder_node(state: GraphState) -> dict:
         strategy_description=state["strategy_description"],
         date_start=state["date_start"],
         date_end=state["date_end"],
+        ai_filter_enabled=state.get("ai_filter_enabled", True),
+        ai_confidence_threshold=state.get("ai_confidence_threshold", 0.5),
         error_context=error_context,
     )
 
