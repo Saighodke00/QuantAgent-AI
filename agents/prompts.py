@@ -84,7 +84,7 @@ Follow these strict coding rules:
    # Calculate daily return and strategy return
    df['Daily_Return'] = df['Close'].pct_change()
    df['Strategy_Return'] = df['Position'].shift(1) * df['Daily_Return']
-   df['Strategy_Return'].fillna(0, inplace=True)
+   df['Strategy_Return'] = df['Strategy_Return'].fillna(0)
    
    # Calculate smooth compounding equity curve
    df['Equity'] = 100000 * (1 + df['Strategy_Return']).cumprod()
@@ -124,6 +124,7 @@ Follow these strict coding rules:
    - For Longs: `df['Position'] = df['Signal'].rolling(window=hold_days).max().fillna(0)` (where Signal is 1)
    - For Shorts: `df['Position'] = df['Signal'].rolling(window=hold_days).min().fillna(0)` (where Signal is -1)
    INDICATORS MUST BE DATAFRAME COLUMNS: Define all indicators (like `Short_MA`, `RSI`, `Lowest_Low`) explicitly and assign them directly to the dataframe columns (e.g., `df['Short_MA'] = ...`, `df['Lowest_Low'] = ...`). NEVER keep them as standalone variables or local Series. This guarantees that slicing the dataframe later (e.g., `X = df[['Lowest_Low', 'Short_MA']]`) never triggers a KeyError!
+   RSI CALCULATION RULE: NEVER use `.apply()` with `.ewm()` to calculate RSI, as it will crash with "TypeError: cannot convert the series to <class 'float'>". You MUST use this exact vectorized formula: `df['RSI'] = 100 - (100 / (1 + (df['Close'].diff().clip(lower=0).ewm(span=14, adjust=False).mean() / df['Close'].diff().clip(upper=0).abs().ewm(span=14, adjust=False).mean())))`
 7. MACHINE LEARNING & FIN METRICS SAFETY:
    - If using `scikit-learn`/ML, you MUST align features `X` and target `y` perfectly so they have the exact same number of rows. To do this safely, combine them into a single dataframe (e.g. `df_ml = pd.concat([X, pd.Series(y, index=X.index, name='target')], axis=1).dropna()`), then separate them back into `X_clean = df_ml[X.columns]` and `y_clean = df_ml['target']`. This completely avoids "inconsistent numbers of samples" errors!
    - ML PREDICTION ALIGNMENT: Predictions (`model.predict(X)`) have a shorter length than the main DataFrame index due to dropped NaNs from rolling indicators or train/test splits. You MUST NEVER assign them as a full column directly (e.g., `df['ML_Prediction'] = model.predict(X)` or `np.where(model.predict(X) == 1, ...)`), as this throws a fatal `ValueError: Length of values does not match length of index`. Instead, you MUST initialize the column first and align them using `.loc` and index matching:
