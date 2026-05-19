@@ -1,3 +1,12 @@
+---
+title: APEX Quant-Forge
+emoji: ⚡
+colorFrom: green
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # ⚡ APEX Quant-Forge: Enterprise Agentic Quantitative Backtesting Engine
 
 > [!NOTE]
