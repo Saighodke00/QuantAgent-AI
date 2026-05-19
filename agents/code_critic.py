@@ -76,11 +76,31 @@ def code_critic_node(state: GraphState) -> dict:
             ]
         )
         fixed_code = _strip_fences(clean_response_content(response.content))
+        
+        import difflib
+        original_code = state.get("generated_code", "")
+        
+        diff = list(difflib.unified_diff(
+            original_code.splitlines(),
+            fixed_code.splitlines(),
+            fromfile="❌ Broken Code",
+            tofile="✅ Fixed Code",
+            lineterm=""
+        ))
+        
+        # Extract Reasoning
+        reasoning = []
+        for line in fixed_code.split("\n"):
+            if line.strip().startswith("# FIX:") or line.strip().startswith("# REASON:"):
+                reasoning.append(line.strip())
+        
         logs.append(_make_log("Patch applied. Routing back to sandbox...", "WARNING"))
         return {
             "generated_code": fixed_code,
             "retry_count": retry,
             "last_error": "",
+            "critic_diff": "\n".join(diff),
+            "critic_reasoning": "\n".join(reasoning),
             "agent_logs": logs,
         }
 

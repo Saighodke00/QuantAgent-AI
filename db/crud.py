@@ -25,7 +25,10 @@ def save_backtest(
     result: dict,
 ) -> str:
     """Persist a completed backtest. Returns the new UUID."""
+    import secrets
     strategy_id = str(uuid.uuid4())
+    share_token = secrets.token_urlsafe(8)  # item 14: cryptographically random, URL-safe
+    
     conn = get_connection()
     conn.execute(
         """
@@ -34,8 +37,8 @@ def save_backtest(
              generated_python_code, win_rate_percentage,
              total_return_percentage, max_drawdown_percentage,
              sharpe_ratio, total_trades, equity_curve_points,
-             feature_importances, trade_log, advanced_stats, created_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             feature_importances, trade_log, advanced_stats, share_token, created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
             strategy_id,
@@ -52,12 +55,35 @@ def save_backtest(
             json.dumps(result.get("feature_importances", {})),
             json.dumps(result.get("trade_log", [])),
             json.dumps(result.get("advanced_stats", {})),
+            share_token,
             _now(),
         ),
     )
     conn.commit()
     conn.close()
+    
+    # Store share_token on the result dict so Streamlit can access it right away
+    result["share_token"] = share_token
+    
     return strategy_id
+
+def get_backtest_by_share_token(share_token: str) -> dict | None:
+    """Fetch a single backtest via share token."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM strategy_backtests WHERE share_token = ?", (share_token,)
+    ).fetchone()
+    conn.close()
+    if not row:
+        return None
+    d = dict(row)
+    d["equity_curve_points"] = json.loads(d["equity_curve_points"])
+    d["feature_importances"] = json.loads(d["feature_importances"]) if d.get("feature_importances") else {}
+    d["trade_log"] = json.loads(d["trade_log"]) if d.get("trade_log") else []
+    d["advanced_stats"] = json.loads(d["advanced_stats"]) if d.get("advanced_stats") else {
+        "Profit_Factor": 1.0, "Sortino_Ratio": 0.0, "Max_Win_Streak": 0, "Total_Skipped_Signals": 0
+    }
+    return d
 
 
 def save_agent_logs(strategy_id: str, logs: list[dict]) -> None:

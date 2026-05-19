@@ -64,6 +64,11 @@ def init_db() -> None:
         cursor.execute("ALTER TABLE strategy_backtests ADD COLUMN advanced_stats TEXT;")
     except sqlite3.OperationalError:
         pass
+    try:
+        cursor.execute("ALTER TABLE strategy_backtests ADD COLUMN share_token TEXT;")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_strategies_share ON strategy_backtests(share_token);")
+    except sqlite3.OperationalError:
+        pass
 
     conn.commit()
     conn.close()

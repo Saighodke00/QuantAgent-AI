@@ -1,7 +1,9 @@
 .venv/
-.env
-*.db
 __pycache__/
 *.pyc
-.pytest_cache/
-.antigravity/
+.env
+quant_forge.db
+quant_forge_code_cache.json
+failed_script.py
+.streamlit/
+test_keys.py

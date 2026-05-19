@@ -1,12 +1,17 @@
 """
 LangGraph StateGraph — the full agent orchestration pipeline.
 
-Graph topology:
-  quant_coder → sandbox_runner → [conditional]
-                                     ├─ finalize      (success)
-                                     ├─ code_critic   (failure + retries left)
-                                     └─ fail_graceful (failure + retries exhausted)
-  code_critic → quant_coder  (loop back)
+Graph topology (FIXED):
+  quant_coder → ast_validator → [conditional]
+                                    ├─ sandbox_runner  (passed validation)
+                                    └─ code_critic     (failed validation)
+
+  sandbox_runner → [conditional]
+                       ├─ finalize       (success)
+                       ├─ code_critic    (failure + retries left)
+                       └─ fail_graceful  (failure + retries exhausted)
+
+  code_critic → ast_validator   ← FIXED: was quant_coder (discarded critic's fix)
   finalize / fail_graceful → END
 """
 from __future__ import annotations
@@ -117,14 +122,40 @@ def _build_execution_graph() -> StateGraph:
     """
     g = StateGraph(GraphState)
 
+    from agents.validator import ast_validator_node
+
     g.add_node("quant_coder", quant_coder_node)
+    g.add_node("ast_validator", ast_validator_node)
     g.add_node("sandbox_runner", sandbox_runner_node)
     g.add_node("code_critic", code_critic_node)
     g.add_node("finalize", finalize_node)
     g.add_node("fail_gracefully", fail_gracefully_node)
 
     g.set_entry_point("quant_coder")
-    g.add_edge("quant_coder", "sandbox_runner")
+    
+    # Coder -> Validator
+    g.add_edge("quant_coder", "ast_validator")
+    
+    # Validator -> Sandbox OR Critic OR Failure
+    def route_after_validator(state: GraphState) -> str:
+        if state.get("validation_passed", False):
+            return "sandbox_runner"
+        # If we hit max retries or a rate limit abort (retry_count=99), stop and fail gracefully
+        if state.get("retry_count", 0) >= _MAX_RETRIES:
+            return "fail_gracefully"
+        # If it fails validation, send it straight to critic to rewrite
+        return "code_critic"
+        
+    g.add_conditional_edges(
+        "ast_validator",
+        route_after_validator,
+        {
+            "sandbox_runner": "sandbox_runner",
+            "code_critic": "code_critic",
+            "fail_gracefully": "fail_gracefully",
+        }
+    )
+    
     g.add_conditional_edges(
         "sandbox_runner",
         route_after_sandbox,
@@ -134,7 +165,10 @@ def _build_execution_graph() -> StateGraph:
             "fail_gracefully": "fail_gracefully",
         },
     )
-    g.add_edge("code_critic", "quant_coder")
+    # ── FIXED: Critic's patch goes to validator → sandbox directly ──────────
+    # OLD (wrong): g.add_edge("code_critic", "quant_coder")
+    # The old edge threw away the critic's careful fix and rewrote from scratch.
+    g.add_edge("code_critic", "ast_validator")  # Fixed
     g.add_edge("finalize", END)
     g.add_edge("fail_gracefully", END)
 

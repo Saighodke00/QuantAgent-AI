@@ -57,9 +57,34 @@ def quant_coder_node(state: GraphState) -> dict:
     """
     LangGraph node: generate full Python backtest script.
     If retry_count > 0, the last_error is passed to the prompt.
+
+    Fix 5: On first attempt (retry==0) check the code cache before calling
+    the LLM. On success, save the result to cache for future hits.
     """
     logs: list[AgentLog] = []
     retry = state.get("retry_count", 0)
+
+    # ── Fix 5: Check code cache before LLM call (first attempt only) ──────
+    if retry == 0:
+        try:
+            from agents.code_cache import get_cached_code
+            cached = get_cached_code(
+                state["ticker"],
+                state["strategy_type"],
+                state["date_start"],
+                state["date_end"],
+                state.get("ai_filter_enabled", True),
+                state.get("ai_confidence_threshold", 0.5),
+            )
+            if cached:
+                logs.append(_make_log(
+                    f"⚡ Cache hit — reusing generated code for "
+                    f"{state['ticker']} / {state['strategy_type']}. Skipping LLM call.",
+                    "SUCCESS",
+                ))
+                return {"generated_code": cached, "agent_logs": logs}
+        except Exception:
+            pass  # Cache miss or error — proceed to LLM
 
     if retry == 0:
         logs.append(_make_log(f"Generating backtest script for {state['ticker']}..."))
@@ -97,6 +122,23 @@ def quant_coder_node(state: GraphState) -> dict:
         full_code = strategy_logic
 
         logs.append(_make_log(f"Script generated — {len(full_code.splitlines())} lines.", "SUCCESS"))
+
+        # ── Fix 5: Save successful generation to code cache ────────────────
+        if retry == 0:
+            try:
+                from agents.code_cache import save_code
+                save_code(
+                    state["ticker"],
+                    state["strategy_type"],
+                    state["date_start"],
+                    state["date_end"],
+                    state.get("ai_filter_enabled", True),
+                    state.get("ai_confidence_threshold", 0.5),
+                    full_code,
+                )
+            except Exception:
+                pass  # Cache write failure is non-fatal
+
         return {"generated_code": full_code, "agent_logs": logs}
 
     except Exception as e:
