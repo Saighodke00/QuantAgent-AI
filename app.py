@@ -106,9 +106,11 @@ st.markdown(f"""
 # ─────────────────────────────────────────────────────────────────────
 # API Key Guard
 # ─────────────────────────────────────────────────────────────────────
-if not os.environ.get("GEMINI_API_KEY"):
-    st.error("⚠️ GEMINI_API_KEY not found. Create a `.env` file — see `.env.example`.")
-    st.stop()
+SUPPORTED_KEYS = ["GROQ_API_KEY", "GEMINI_API_KEY", "CEREBRAS_API_KEY", "OPENROUTER_API_KEY", "MISTRAL_API_KEY"]
+has_any_key = any(os.environ.get(k) for k in SUPPORTED_KEYS)
+
+if not has_any_key:
+    st.warning("⚠️ No active LLM API keys found (GROQ, GEMINI, CEREBRAS, etc.). APEX Quant-Forge is running in **Demo / Mock Mode**.")
 
 # ─────────────────────────────────────────────────────────────────────
 # Layout: 3 Columns
